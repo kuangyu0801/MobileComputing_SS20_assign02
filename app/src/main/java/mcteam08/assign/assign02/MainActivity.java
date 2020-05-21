@@ -15,11 +15,15 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
+import android.widget.Button;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity implements ServiceConnection {
     final private static String TAG = MainActivity.class.getCanonicalName();
     final private static int MY_PERMISSION_REQUEST_FINE_LOCATION = 1; // request
 
+    private Button bStart, bStop, bUpdate;
+    private TextView tvLongitude, tvLatitude, tvDistance, tvAvgSpeed;
     private IPositionRecordService serviceProxy;
     private Intent i0;
 
@@ -32,6 +36,15 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
             enableLocationSettings();
         requestLocationPermission();
+
+        tvLongitude = findViewById(R.id.textViewLon);
+        tvLatitude = findViewById(R.id.textViewLat);
+        tvDistance = findViewById(R.id.textViewDistance);
+        tvAvgSpeed = findViewById(R.id.textViewAvgSpeed);
+        bStart = findViewById(R.id.button_start);
+        bStop = findViewById(R.id.button_stop);
+        bUpdate = findViewById(R.id.button_update);
+
     }
 
     @Override
