@@ -21,28 +21,37 @@
         android:id="@+id/textViewLat"
         android:layout_width="240dp"
         android:layout_height="40dp"
+        android:layout_marginStart="83dp"
         android:layout_marginTop="25dp"
+        android:layout_marginEnd="88dp"
         android:text="@string/tv1"
-        app:layout_constraintTop_toBottomOf="@+id/textViewLon"
-        tools:layout_editor_absoluteX="83dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewLon" />
 
     <TextView
         android:id="@+id/textViewDistance"
         android:layout_width="240dp"
         android:layout_height="40dp"
+        android:layout_marginStart="82dp"
         android:layout_marginTop="24dp"
+        android:layout_marginEnd="89dp"
         android:text="@string/tv2"
-        app:layout_constraintTop_toBottomOf="@+id/textViewLat"
-        tools:layout_editor_absoluteX="82dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewLat" />
 
     <TextView
         android:id="@+id/textViewAvgSpeed"
         android:layout_width="240dp"
         android:layout_height="40dp"
+        android:layout_marginStart="82dp"
         android:layout_marginTop="24dp"
+        android:layout_marginEnd="89dp"
         android:text="@string/tv3"
-        app:layout_constraintTop_toBottomOf="@+id/textViewDistance"
-        tools:layout_editor_absoluteX="82dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewDistance" />
 
     <Button
         android:id="@+id/button_start"
@@ -61,20 +70,24 @@
         android:id="@+id/button_update"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="138dp"
         android:layout_marginTop="352dp"
         android:layout_marginEnd="136dp"
         android:text="@string/bt_update"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/button_stop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="41dp"
         android:layout_marginEnd="64dp"
         android:layout_marginBottom="220dp"
         android:text="@string/bt_stop"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/button_start" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
