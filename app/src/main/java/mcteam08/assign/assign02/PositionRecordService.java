@@ -73,12 +73,12 @@ public class PositionRecordService extends Service implements LocationListener {
 
         @Override
         public double getLongitude() throws RemoteException {
-            return 0;
+            return dataLocation[0];
         }
 
         @Override
         public double getLatitude() throws RemoteException {
-            return 0;
+            return dataLocation[1];
         }
 
         @Override
@@ -95,7 +95,6 @@ public class PositionRecordService extends Service implements LocationListener {
     @Override
     public IBinder onBind(Intent intent) {
         Log.i(TAG, "Service bound");
-
         return impl;
     }
 
@@ -124,5 +123,13 @@ public class PositionRecordService extends Service implements LocationListener {
     @Override
     public void onProviderDisabled(String provider) {
 
+    }
+
+    private double distanceCalculation() {
+        return 0;
+    }
+
+    private double avgspeedCalculation() {
+        return 0;
     }
 }

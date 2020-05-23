@@ -13,8 +13,10 @@ import android.content.ServiceConnection;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -53,7 +55,45 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         super.onStart();
         i0 = new Intent(this, PositionRecordService.class);
         startService(i0);
-        bindService(i0, this, BIND_AUTO_CREATE);
+
+
+        bStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.i(TAG, "Click start record");
+                bindService();
+                //TODO: how to use bindService(i0, this, BIND_AUTO_CREATE); inside this class
+                // keyword "this" would refer to class OnClickListener not ServiceConnection
+            }
+        });
+
+        bStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.i(TAG, "Click stop record");
+                unbindService();
+            }
+        });
+
+        bUpdate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Double avgSpeed = serviceProxy.getAverageSpeed();
+                    Double distance = serviceProxy.getDistance();
+                    Double latitude = serviceProxy.getLatitude();
+                    Double longitude = serviceProxy.getLongitude();
+
+                    tvLongitude.setText(longitude.toString());
+                    tvLatitude.setText(latitude.toString());
+                    tvDistance.setText(distance.toString());
+                    tvAvgSpeed.setText(avgSpeed.toString());
+
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     @Override
@@ -96,4 +136,13 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .show();
     }
+
+    private void bindService() {
+        bindService(i0, this, BIND_AUTO_CREATE);
+    }
+
+    private void unbindService() {
+        unbindService(this);
+    }
+
 }
