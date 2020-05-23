@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 bindService();
                 //TODO: how to use bindService(i0, this, BIND_AUTO_CREATE); inside this class
                 // keyword "this" would refer to class OnClickListener not ServiceConnection
+                //这个问题我研究过，没找着方法。如果只单纯用startService呢
             }
         });
 

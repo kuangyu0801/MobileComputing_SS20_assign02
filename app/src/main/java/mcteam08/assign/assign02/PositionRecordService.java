@@ -126,7 +126,15 @@ public class PositionRecordService extends Service implements LocationListener {
     }
 
     private double distanceCalculation() {
-        return 0;
+        double toRad = Math.PI / 180.0;
+        double lon1 = dataLocation[0] * toRad;
+        double lat1 = (90 - dataLocation[1]) * toRad;
+
+        double lon2;
+        double lat2;
+
+        final double EARTH_RADIUS = 6371004; //meter
+        return EARTH_RADIUS * Math.acos(Math.sin(lat1) * Math.sin(lat2) * Math.cos(lon1-lon2) + Math.cos(lat1) * Math.cos(lat2));
     }
 
     private double avgspeedCalculation() {
