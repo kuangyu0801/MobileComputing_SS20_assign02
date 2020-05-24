@@ -129,15 +129,21 @@ public class PositionRecordService extends Service implements LocationListener {
         double toRad = Math.PI / 180.0;
         double lon1 = dataLocation[0] * toRad;
         double lat1 = (90 - dataLocation[1]) * toRad;
-
-        double lon2;
-        double lat2;
+        // TODO: update current location
+        double lon2 = 0;
+        double lat2 = 0;
 
         final double EARTH_RADIUS = 6371004; //meter
         return EARTH_RADIUS * Math.acos(Math.sin(lat1) * Math.sin(lat2) * Math.cos(lon1-lon2) + Math.cos(lat1) * Math.cos(lat2));
     }
 
     private double avgspeedCalculation() {
+        // TODO: add timer
         return 0;
+    }
+
+    private void writeToGpxFile() {
+        // TODO: finish this timer
+
     }
 }
