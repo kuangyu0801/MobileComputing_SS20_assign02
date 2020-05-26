@@ -10,8 +10,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.Settings;
@@ -23,6 +25,7 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity implements ServiceConnection {
     final private static String TAG = MainActivity.class.getCanonicalName();
     final private static int MY_PERMISSION_REQUEST_FINE_LOCATION = 1; // request
+    final private static int MY_PERMISSION_REQUEST_READ_WRITE_EXTERNAL_STORAGE = 1; // request
 
     private Button bStart, bStop, bUpdate;
     private TextView tvLongitude, tvLatitude, tvDistance, tvAvgSpeed;
@@ -38,6 +41,14 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
             enableLocationSettings();
         requestLocationPermission();
+
+        requestReadWritePermission();
+        checkExternalMounted();
+        checkExternalPermission();
+        checkExternalStorageReadable();
+        checkExternalStorageWritable();
+
+
 
         tvLongitude = findViewById(R.id.textViewLon);
         tvLatitude = findViewById(R.id.textViewLat);
@@ -122,6 +133,11 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 MY_PERMISSION_REQUEST_FINE_LOCATION);
     }
 
+    private void requestReadWritePermission() {
+        requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
+                MY_PERMISSION_REQUEST_READ_WRITE_EXTERNAL_STORAGE);
+    }
+
     private void enableLocationSettings() {
         new AlertDialog.Builder(this)
                 .setTitle("Enable GPS")
@@ -139,11 +155,55 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     }
 
     private void bindService() {
+
         bindService(i0, this, BIND_AUTO_CREATE);
     }
 
     private void unbindService() {
+
         unbindService(this);
     }
 
+    private boolean checkExternalPermission(){
+        if(ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            Log.i(TAG, "permission denied");
+            return false;
+        }
+        Log.i(TAG, "permission granted");
+        return true;
+    }
+
+    private boolean checkExternalMounted() {
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            Log.i(TAG, "SD card mounted");
+            return true;
+        }
+        Log.i(TAG, "SD card not mounted");
+        return false;
+    }
+
+    public boolean checkExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            Log.i(TAG, "External storage writable");
+            return true;
+        }
+        Log.i(TAG, "External storage not writable");
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public boolean checkExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            Log.i(TAG, "External storage readable");
+            return true;
+        }
+        Log.i(TAG, "External storage not readable");
+        return false;
+    }
 }
