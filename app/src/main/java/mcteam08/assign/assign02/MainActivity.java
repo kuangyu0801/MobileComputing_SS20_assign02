@@ -73,9 +73,9 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             public void onClick(View v) {
                 Log.i(TAG, "Click start record");
                 bindService();
-                //TODO: how to use bindService(i0, this, BIND_AUTO_CREATE); inside this class
+                // TODO: how to use bindService(i0, this, BIND_AUTO_CREATE); inside this class
                 // keyword "this" would refer to class OnClickListener not ServiceConnection
-                //这个问题我研究过，没找着方法。如果只单纯用startService呢
+                // 这个问题我研究过，没找着方法。如果只单纯用startService呢
             }
         });
 

@@ -19,7 +19,6 @@ import androidx.core.content.ContextCompat;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public class PositionRecordService extends Service implements LocationListener {
@@ -28,16 +27,20 @@ public class PositionRecordService extends Service implements LocationListener {
     final private static long MIN_TIME = 5000; // 5 seconds
     final private static int MIN_TIME_ACC = 5000000; // 5 seconds
     final private static long MIN_DISTANCE = 1; // 1 meter
+    final private static double EARTH_RADIUS = 6371004; //meter
+    final private static double DEGREE_TO_RAD_FACTOR = Math.PI / 180.0;
 
     private LocalTime startTime;
     private LocalTime currentTime;
     private LocalTime endTime;
-    private int elaspedTimeInSeond;
-    private int traveledDistance;
+    private long elaspedTime;
+    private double distance;
     private double avgSpeed; // meter per second
 
     private PositionRecordServiceImpl impl;
-    double[] dataLocation = new double[2];
+    private double[] currentLocation = new double[2];
+    private double[] startLocation = new double[2];
+    boolean isFristLocation;
     LocationManager locationManager;
     private File output;
 
@@ -50,8 +53,8 @@ public class PositionRecordService extends Service implements LocationListener {
         Log.i(TAG, "Service created");
         super.onCreate();
         impl = new PositionRecordServiceImpl();
-        elaspedTimeInSeond = 0;
-        traveledDistance = 0;
+        elaspedTime = 0;
+        distance = 0;
     }
 
     @Override
@@ -100,29 +103,35 @@ public class PositionRecordService extends Service implements LocationListener {
 
         @Override
         public double getLongitude() throws RemoteException {
-            return dataLocation[0];
+            return currentLocation[0];
         }
 
         @Override
         public double getLatitude() throws RemoteException {
-            return dataLocation[1];
+            return currentLocation[1];
         }
 
+        /** Distance and average speed arr only updated when activity
+         * performs PRC call;
+         * */
         @Override
         public double getAverageSpeed() throws RemoteException {
+            distance = distanceCalculation(startLocation, currentLocation);
+            elaspedTime = elapsedTimeCalculation(startTime, currentTime);
+            avgSpeed = averageSpeedCalculation(distance, elaspedTime);
             return avgSpeed;
         }
 
         @Override
         public double getDistance() throws RemoteException {
-            return 0;
+            distance = distanceCalculation(startLocation, currentLocation);
+            return distance;
         }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         Log.i(TAG, "Service bound");
-
 
         // record the start time
         initState();
@@ -139,11 +148,17 @@ public class PositionRecordService extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
-        dataLocation[0] = location.getLongitude();
-        dataLocation[1] = location.getLatitude();
 
-        writeToGPXFile(dataLocation[0], dataLocation[1]);
+        if (isFristLocation) {
+            startLocation[0] = location.getLongitude();
+            startLocation[1] = location.getLatitude();
+            isFristLocation = false;
+        }
 
+        currentLocation[0] = location.getLongitude();
+        currentLocation[1] = location.getLatitude();
+
+        writeToGPXFile(currentLocation[0], currentLocation[1]);
         // update current Time and calculated elasped time in second
         currentTime = LocalTime.now();
     }
@@ -163,32 +178,29 @@ public class PositionRecordService extends Service implements LocationListener {
 
     }
 
-    private double distanceCalculation() {
-        double toRad = Math.PI / 180.0;
-        double lon1 = dataLocation[0] * toRad;
-        double lat1 = (90 - dataLocation[1]) * toRad;
-        // TODO: update current location
-        double lon2 = 0;
-        double lat2 = 0;
-
-        final double EARTH_RADIUS = 6371004; //meter
-        return EARTH_RADIUS * Math.acos(Math.sin(lat1) * Math.sin(lat2) * Math.cos(lon1-lon2) + Math.cos(lat1) * Math.cos(lat2));
+    // Formula reference: https://www.cnblogs.com/ycsfwhh/archive/2010/12/20/1911232.html
+    private double distanceCalculation(double[] locationStart, double[] locationCurrent) {
+        // DONE: update current location
+        double lon1 = locationStart[0] * DEGREE_TO_RAD_FACTOR;
+        double lat1 = (90 - locationStart[1]) * DEGREE_TO_RAD_FACTOR;
+        double lon2 = locationCurrent[0] * DEGREE_TO_RAD_FACTOR;
+        double lat2 = (90 - locationCurrent[1]) * DEGREE_TO_RAD_FACTOR;
+        return EARTH_RADIUS * Math.acos(Math.sin(lat1) * Math.sin(lat2) * Math.cos(lon1 - lon2) + Math.cos(lat1) * Math.cos(lat2));
     }
 
-    private double avgSpeedCalculation() {
-        avgSpeed = distanceCalculation() / elapsedTimeInSecond(startTime, currentTime);
-        return avgSpeed;
+    private double averageSpeedCalculation(double traveledDistance, long timeInSeconds) {
+        return traveledDistance / timeInSeconds;
     }
 
     private void writeToGPXFile(double longitude, double latitude) {
-        // TODO: finish this timer
+        // TODO: finish this writer
     }
 
-    private int elapsedTimeInSecond(LocalTime start, LocalTime end) {
-        int startTimetInSecond = timeInSecond(start);
+    private int elapsedTimeCalculation(LocalTime start, LocalTime end) {
+        int startTimeInSecond = timeInSecond(start);
         int endTimeInSecond = timeInSecond(end);
 
-        return (endTimeInSecond - startTimetInSecond);
+        return (endTimeInSecond - startTimeInSecond);
     }
 
     private int timeInSecond(LocalTime time) {
@@ -200,8 +212,9 @@ public class PositionRecordService extends Service implements LocationListener {
         startTime = LocalTime.now();
         currentTime = startTime;
         endTime = startTime;
-        traveledDistance = 0;
-        elaspedTimeInSeond = 0;
+        distance = 0;
+        elaspedTime = 0;
         avgSpeed = 0;
+        isFristLocation = true;
     }
 }
