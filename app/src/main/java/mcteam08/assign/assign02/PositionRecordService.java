@@ -55,6 +55,7 @@ public class PositionRecordService extends Service implements LocationListener {
         impl = new PositionRecordServiceImpl();
         elaspedTime = 0;
         distance = 0;
+
     }
 
     @Override
@@ -79,6 +80,8 @@ public class PositionRecordService extends Service implements LocationListener {
             }
         }
 
+        // TODO: step-1 crate GPX file with prefix
+
         // create an output file
         try {
             File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
@@ -95,6 +98,7 @@ public class PositionRecordService extends Service implements LocationListener {
     public void onDestroy() {
         Log.i(TAG, "Service destroyed");
         locationManager.removeUpdates(this);
+        // TODO: step-3 add post-fix to GPX and finish file.
         super.onDestroy();
 
     }
@@ -161,6 +165,8 @@ public class PositionRecordService extends Service implements LocationListener {
         writeToGPXFile(currentLocation[0], currentLocation[1]);
         // update current Time and calculated elasped time in second
         currentTime = LocalTime.now();
+
+        // TODO: step-2 add treck to GPX
     }
 
     @Override
@@ -191,6 +197,7 @@ public class PositionRecordService extends Service implements LocationListener {
     private double averageSpeedCalculation(double traveledDistance, long timeInSeconds) {
         return traveledDistance / timeInSeconds;
     }
+
 
     private void writeToGPXFile(double longitude, double latitude) {
         // TODO: finish this writer
