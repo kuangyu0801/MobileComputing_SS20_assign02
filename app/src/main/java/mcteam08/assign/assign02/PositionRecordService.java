@@ -14,12 +14,20 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
+import android.util.Xml;
 
 import androidx.core.content.ContextCompat;
 
+import org.xmlpull.v1.XmlSerializer;
+
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
+import java.text.SimpleDateFormat;
 import java.time.LocalTime;
+import java.util.Date;
 
 public class PositionRecordService extends Service implements LocationListener {
     final private static String TAG = PositionRecordService.class.getCanonicalName();
@@ -42,7 +50,13 @@ public class PositionRecordService extends Service implements LocationListener {
     private double[] startLocation = new double[2];
     boolean isFristLocation;
     LocationManager locationManager;
-    private File output;
+
+    private File outputFile;
+    private XmlSerializer serializer;
+    private Writer writer;
+    private final SimpleDateFormat sdf = new SimpleDateFormat(
+            "yyyy-MM-dd'T'HH:mm:ss'Z'");
+    private boolean preludeWritten = false;
 
     // default constructor
     public PositionRecordService() {
@@ -80,26 +94,29 @@ public class PositionRecordService extends Service implements LocationListener {
             }
         }
 
-        // TODO: step-1 crate GPX file with prefix
 
-        // create an output file
-        try {
-            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-            File outputFile = new File(path.getCanonicalPath(), FILENAME);
+//        // create an output file
+//        try {
+//            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+//            outputFile = new File(path.getCanonicalPath(), FILENAME);
+//
+//        }  catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
-        }  catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        // DONE: step-1 crate GPX file with prefix
+        serializer = Xml.newSerializer();
+        beginTrack();
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public void onDestroy() {
         Log.i(TAG, "Service destroyed");
-        locationManager.removeUpdates(this);
-        // TODO: step-3 add post-fix to GPX and finish file.
         super.onDestroy();
+        locationManager.removeUpdates(this);
+        // DONE: step-3 add post-fix to GPX and finish file.
+        endTrack();
 
     }
 
@@ -166,7 +183,8 @@ public class PositionRecordService extends Service implements LocationListener {
         // update current Time and calculated elasped time in second
         currentTime = LocalTime.now();
 
-        // TODO: step-2 add treck to GPX
+        // DONE: step-2 add treck to GPX
+        addTrackPoint(location);
     }
 
     @Override
@@ -224,4 +242,87 @@ public class PositionRecordService extends Service implements LocationListener {
         avgSpeed = 0;
         isFristLocation = true;
     }
+
+    // reference: https://github.com/HvB
+    private void beginTrack() {
+        Log.i(TAG,"Writing the prelude of the GPX file ");
+
+        try {
+            // create an output file
+            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            outputFile = new File(path.getCanonicalPath(), FILENAME);
+            // start to write the prelude
+            writer = new BufferedWriter(new FileWriter(outputFile));
+            serializer.setOutput(writer);
+            serializer.startDocument("UTF-8", true);
+            serializer.setPrefix("xsi",
+                    "http://www.w3.org/2001/XMLSchema-instance");
+            serializer.setPrefix("", "http://www.topografix.com/GPX/1/1");
+            serializer.startTag("http://www.topografix.com/GPX/1/1", "gpx");
+            serializer
+                    .attribute("http://www.w3.org/2001/XMLSchema-instance",
+                            "schemaLocation",
+                            "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd");
+            serializer.attribute(null, "version", "1.1");
+            serializer.attribute(null, "creator", "Team8");
+            serializer
+                    .startTag("http://www.topografix.com/GPX/1/1", "metadata");
+            serializer.startTag("http://www.topografix.com/GPX/1/1", "time");
+            serializer.text(sdf.format(new Date()));
+            serializer.endTag("http://www.topografix.com/GPX/1/1", "time");
+            serializer.endTag("http://www.topografix.com/GPX/1/1", "metadata");
+            serializer.startTag("http://www.topografix.com/GPX/1/1", "trk");
+            serializer.startTag("http://www.topografix.com/GPX/1/1", "trkseg");
+            preludeWritten = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void addTrackPoint(Location location)  {
+        Log.i(TAG,"Adding a track point (trkpt) in the GPX file ");
+
+        try {
+            if (!preludeWritten) {
+                beginTrack();
+            }
+            if (outputFile != null && serializer != null) {
+                serializer.startTag("http://www.topografix.com/GPX/1/1",
+                        "trkpt");
+                serializer.attribute(null, "lat",
+                        Double.toString(location.getLatitude()));
+                serializer.attribute(null, "lon",
+                        Double.toString(location.getLongitude()));
+                serializer
+                        .startTag("http://www.topografix.com/GPX/1/1", "time");
+                serializer.text(sdf.format(new Date(location.getTime())));
+                serializer.endTag("http://www.topografix.com/GPX/1/1", "time");
+                serializer.endTag("http://www.topografix.com/GPX/1/1", "trkpt");
+            }
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void endTrack()  {
+        Log.i(TAG,"Ending the GPX file ");
+
+        try {
+            if (outputFile != null && serializer != null && writer != null) {
+                serializer
+                        .endTag("http://www.topografix.com/GPX/1/1", "trkseg");
+                serializer.endTag("http://www.topografix.com/GPX/1/1", "trk");
+                serializer.endTag("http://www.topografix.com/GPX/1/1", "gpx");
+                serializer.endDocument();
+                serializer.flush();
+                preludeWritten = false;
+                writer.close();
+                outputFile = null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }
