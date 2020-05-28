@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">assign02</string>
-    <string name="bt_start">START RECORD</string>
-    <string name="bt_stop">STOP RECORD</string>
+    <string name="bt_start">START SERVICE</string>
+    <string name="bt_stop">STOP SERVICE</string>
     <string name="bt_update">UPDATE STATICS</string>
     <string name="tv0">Longitude</string>
     <string name="tv1">Latitude</string>

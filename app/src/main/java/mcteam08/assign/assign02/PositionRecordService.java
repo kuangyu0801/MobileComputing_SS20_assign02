@@ -16,8 +16,8 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.util.Xml;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.BufferedWriter;
@@ -37,6 +37,8 @@ public class PositionRecordService extends Service implements LocationListener {
     final private static long MIN_DISTANCE = 1; // 1 meter
     final private static double EARTH_RADIUS = 6371004; //meter
     final private static double DEGREE_TO_RAD_FACTOR = Math.PI / 180.0;
+    final private static int MY_PERMISSION_REQUEST_READ_WRITE_EXTERNAL_STORAGE = 1; // request
+
 
     private LocalTime startTime;
     private LocalTime currentTime;
@@ -54,8 +56,7 @@ public class PositionRecordService extends Service implements LocationListener {
     private File outputFile;
     private XmlSerializer serializer;
     private Writer writer;
-    private final SimpleDateFormat sdf = new SimpleDateFormat(
-            "yyyy-MM-dd'T'HH:mm:ss'Z'");
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private boolean preludeWritten = false;
 
     // default constructor
@@ -69,7 +70,6 @@ public class PositionRecordService extends Service implements LocationListener {
         impl = new PositionRecordServiceImpl();
         elaspedTime = 0;
         distance = 0;
-
     }
 
     @Override
@@ -94,29 +94,20 @@ public class PositionRecordService extends Service implements LocationListener {
             }
         }
 
-
-//        // create an output file
-//        try {
-//            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-//            outputFile = new File(path.getCanonicalPath(), FILENAME);
-//
-//        }  catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
         // DONE: step-1 crate GPX file with prefix
         serializer = Xml.newSerializer();
         beginTrack();
+
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public void onDestroy() {
         Log.i(TAG, "Service destroyed");
-        super.onDestroy();
         locationManager.removeUpdates(this);
         // DONE: step-3 add post-fix to GPX and finish file.
         endTrack();
+        super.onDestroy();
 
     }
 
@@ -179,7 +170,6 @@ public class PositionRecordService extends Service implements LocationListener {
         currentLocation[0] = location.getLongitude();
         currentLocation[1] = location.getLatitude();
 
-        writeToGPXFile(currentLocation[0], currentLocation[1]);
         // update current Time and calculated elasped time in second
         currentTime = LocalTime.now();
 
@@ -216,11 +206,6 @@ public class PositionRecordService extends Service implements LocationListener {
         return traveledDistance / timeInSeconds;
     }
 
-
-    private void writeToGPXFile(double longitude, double latitude) {
-        // TODO: finish this writer
-    }
-
     private int elapsedTimeCalculation(LocalTime start, LocalTime end) {
         int startTimeInSecond = timeInSecond(start);
         int endTimeInSecond = timeInSecond(end);
@@ -255,18 +240,15 @@ public class PositionRecordService extends Service implements LocationListener {
             writer = new BufferedWriter(new FileWriter(outputFile));
             serializer.setOutput(writer);
             serializer.startDocument("UTF-8", true);
-            serializer.setPrefix("xsi",
-                    "http://www.w3.org/2001/XMLSchema-instance");
+            serializer.setPrefix("xsi", "http://www.w3.org/2001/XMLSchema-instance");
             serializer.setPrefix("", "http://www.topografix.com/GPX/1/1");
             serializer.startTag("http://www.topografix.com/GPX/1/1", "gpx");
-            serializer
-                    .attribute("http://www.w3.org/2001/XMLSchema-instance",
+            serializer.attribute("http://www.w3.org/2001/XMLSchema-instance",
                             "schemaLocation",
                             "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd");
             serializer.attribute(null, "version", "1.1");
             serializer.attribute(null, "creator", "Team8");
-            serializer
-                    .startTag("http://www.topografix.com/GPX/1/1", "metadata");
+            serializer.startTag("http://www.topografix.com/GPX/1/1", "metadata");
             serializer.startTag("http://www.topografix.com/GPX/1/1", "time");
             serializer.text(sdf.format(new Date()));
             serializer.endTag("http://www.topografix.com/GPX/1/1", "time");
@@ -287,14 +269,10 @@ public class PositionRecordService extends Service implements LocationListener {
                 beginTrack();
             }
             if (outputFile != null && serializer != null) {
-                serializer.startTag("http://www.topografix.com/GPX/1/1",
-                        "trkpt");
-                serializer.attribute(null, "lat",
-                        Double.toString(location.getLatitude()));
-                serializer.attribute(null, "lon",
-                        Double.toString(location.getLongitude()));
-                serializer
-                        .startTag("http://www.topografix.com/GPX/1/1", "time");
+                serializer.startTag("http://www.topografix.com/GPX/1/1", "trkpt");
+                serializer.attribute(null, "lat", Double.toString(location.getLatitude()));
+                serializer.attribute(null, "lon", Double.toString(location.getLongitude()));
+                serializer.startTag("http://www.topografix.com/GPX/1/1", "time");
                 serializer.text(sdf.format(new Date(location.getTime())));
                 serializer.endTag("http://www.topografix.com/GPX/1/1", "time");
                 serializer.endTag("http://www.topografix.com/GPX/1/1", "trkpt");
@@ -309,8 +287,7 @@ public class PositionRecordService extends Service implements LocationListener {
 
         try {
             if (outputFile != null && serializer != null && writer != null) {
-                serializer
-                        .endTag("http://www.topografix.com/GPX/1/1", "trkseg");
+                serializer.endTag("http://www.topografix.com/GPX/1/1", "trkseg");
                 serializer.endTag("http://www.topografix.com/GPX/1/1", "trk");
                 serializer.endTag("http://www.topografix.com/GPX/1/1", "gpx");
                 serializer.endDocument();
@@ -323,6 +300,5 @@ public class PositionRecordService extends Service implements LocationListener {
             e.printStackTrace();
         }
     }
-
 
 }

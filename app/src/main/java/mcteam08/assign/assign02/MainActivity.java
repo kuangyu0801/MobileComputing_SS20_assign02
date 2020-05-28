@@ -34,8 +34,9 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, "Activity created");
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "Activity created");
+
         setContentView(R.layout.activity_main);
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
@@ -48,8 +49,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         checkExternalStorageReadable();
         checkExternalStorageWritable();
 
-
-
         tvLongitude = findViewById(R.id.textViewLon);
         tvLatitude = findViewById(R.id.textViewLat);
         tvDistance = findViewById(R.id.textViewDistance);
@@ -57,21 +56,22 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         bStart = findViewById(R.id.button_start);
         bStop = findViewById(R.id.button_stop);
         bUpdate = findViewById(R.id.button_update);
-
+        i0 = new Intent(this, PositionRecordService.class);
     }
 
     @Override
     protected void onStart() {
-        Log.i(TAG, "Activity started");
         super.onStart();
-        i0 = new Intent(this, PositionRecordService.class);
-        startService(i0);
+        Log.i(TAG, "Activity started");
+
+
 
 
         bStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.i(TAG, "Click start record");
+                Log.i(TAG, "Start Service clicked");
+                startService(i0);
                 bindService();
                 // TODO: how to use bindService(i0, this, BIND_AUTO_CREATE); inside this class
                 // keyword "this" would refer to class OnClickListener not ServiceConnection
@@ -82,8 +82,9 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         bStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.i(TAG, "Click stop record");
+                Log.i(TAG, "Stop Service clicked");
                 unbindService();
+                stopService(i0);
             }
         });
 
@@ -128,8 +129,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     }
 
     private void requestLocationPermission() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 MY_PERMISSION_REQUEST_FINE_LOCATION);
     }
 
@@ -155,20 +155,20 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     }
 
     private void bindService() {
-
+        Log.i(TAG, "Bind to Service");
         bindService(i0, this, BIND_AUTO_CREATE);
     }
 
     private void unbindService() {
-
+        Log.i(TAG, "Unbind from Service");
         unbindService(this);
     }
 
     private boolean checkExternalPermission(){
         if(ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
             Log.i(TAG, "permission denied");
             return false;
         }
