@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         requestReadWritePermission();
         checkExternalMounted();
+        // TODO: permission is not granted!
         checkExternalPermission();
         checkExternalStorageReadable();
         checkExternalStorageWritable();
@@ -63,9 +64,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     protected void onStart() {
         super.onStart();
         Log.i(TAG, "Activity started");
-
-
-
 
         bStart.setOnClickListener(new View.OnClickListener() {
             @Override
