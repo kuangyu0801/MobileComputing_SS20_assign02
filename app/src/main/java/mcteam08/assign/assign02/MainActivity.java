@@ -1,5 +1,6 @@
 package mcteam08.assign.assign02;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -12,6 +13,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
@@ -21,12 +23,19 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements ServiceConnection {
     final private static String TAG = MainActivity.class.getCanonicalName();
     final private static int MY_PERMISSION_REQUEST_FINE_LOCATION = 1; // request
-    final private static int MY_PERMISSION_REQUEST_READ_WRITE_EXTERNAL_STORAGE = 1; // request
-
+    final private static int MY_PERMISSION_REQUEST_READ_WRITE_EXTERNAL_STORAGE = 2; // request
+    final private static int MY_PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 1; // request
+    final private static int MY_PERMISSION_REQUEST = 1; // request
+    final private static String[] MY_ALL_REQUIRED_PERMSSIONS = {
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_FINE_LOCATION
+    };
     private Button bStart, bStop, bUpdate;
     private TextView tvLongitude, tvLatitude, tvDistance, tvAvgSpeed;
     private IPositionRecordService serviceProxy;
@@ -41,11 +50,10 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
             enableLocationSettings();
-        requestLocationPermission();
 
-        requestReadWritePermission();
+        // DONE: permission is not granted!
+        checkAllPermissions();
         checkExternalMounted();
-        // TODO: permission is not granted!
         checkExternalPermission();
         checkExternalStorageReadable();
         checkExternalStorageWritable();
@@ -64,16 +72,17 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     protected void onStart() {
         super.onStart();
         Log.i(TAG, "Activity started");
-
         bStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.i(TAG, "Start Service clicked");
                 startService(i0);
                 bindService();
-                // TODO: how to use bindService(i0, this, BIND_AUTO_CREATE); inside this class
+                // DONE: how to use bindService(i0, this, BIND_AUTO_CREATE); inside this class
                 // keyword "this" would refer to class OnClickListener not ServiceConnection
                 // 这个问题我研究过，没找着方法。如果只单纯用startService呢
+                // we can use MainActivity.this to indicated the activity
+                // bindService(i0, MainActivity.this, BIND_AUTO_CREATE);
             }
         });
 
@@ -126,16 +135,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         serviceProxy = null;
     }
 
-    private void requestLocationPermission() {
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                MY_PERMISSION_REQUEST_FINE_LOCATION);
-    }
-
-    private void requestReadWritePermission() {
-        requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
-                MY_PERMISSION_REQUEST_READ_WRITE_EXTERNAL_STORAGE);
-    }
-
     private void enableLocationSettings() {
         new AlertDialog.Builder(this)
                 .setTitle("Enable GPS")
@@ -163,11 +162,15 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     }
 
     private boolean checkExternalPermission(){
-        if(ActivityCompat.checkSelfPermission(this,
-            Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
-            Log.i(TAG, "permission denied");
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED ) {
+
+            Log.i(TAG, "READ permission denied");
+            return false;
+        }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.i(TAG, "WRTIE permission denied");
             return false;
         }
         Log.i(TAG, "permission granted");
@@ -193,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         return false;
     }
 
-    /* Checks if external storage is available to at least read */
+    /** Checks if external storage is available to at least read */
     public boolean checkExternalStorageReadable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state) ||
@@ -203,5 +206,85 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         }
         Log.i(TAG, "External storage not readable");
         return false;
+    }
+
+    private boolean checkAllSelfPermissions() {
+        boolean isAllPermissionGranted = true;
+        for (int i = 0; i < MY_ALL_REQUIRED_PERMSSIONS.length; i +=1) {
+            if (ActivityCompat.checkSelfPermission(this, MY_ALL_REQUIRED_PERMSSIONS[i])
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.i(TAG, "Permisson: " + MY_ALL_REQUIRED_PERMSSIONS[i] + "granted!");
+            } else {
+                Log.i(TAG, "Permisson: " + MY_ALL_REQUIRED_PERMSSIONS[i] + "not granted!");
+                isAllPermissionGranted = false;
+            }
+        }
+        return isAllPermissionGranted;
+    }
+
+    /**
+     * The method is used to check all permissions set at once
+     * */
+    private void checkAllPermissions() {
+        if (checkAllSelfPermissions() && Build.VERSION.SDK_INT >= 23) {
+            Toast.makeText(MainActivity.this,
+                    "You have already been granted all permission!",
+                    Toast.LENGTH_SHORT).show();
+        } else {
+            requestAllRPermissions();
+        }
+    }
+    private boolean shouldShowAllRequestPermissionRationale() {
+        boolean shouldShownAllRationale = true;
+
+        for (int i = 0; i < MY_ALL_REQUIRED_PERMSSIONS.length; i +=1) {
+            if (!ActivityCompat.shouldShowRequestPermissionRationale(this, MY_ALL_REQUIRED_PERMSSIONS[i])) {
+                shouldShownAllRationale = false;
+            }
+        }
+        return shouldShownAllRationale;
+    }
+
+    /**
+     * The method is used to acquire permission set at once
+     * */
+    private void requestAllRPermissions() {
+        // Permission has not been granted and must be requested.
+        if (shouldShowAllRequestPermissionRationale()) {
+            // create a dialog notify the use why permission is needed
+            new AlertDialog.Builder(this)
+                    .setTitle("Permission needed")
+                    .setMessage("These permissions are needed for GPS and Read/Write File")
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    MY_ALL_REQUIRED_PERMSSIONS, MY_PERMISSION_REQUEST);
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .create().show();
+        } else {
+            // Request the permission. The result will be received in onRequestPermissionResult().
+            ActivityCompat.requestPermissions(this, MY_ALL_REQUIRED_PERMSSIONS, MY_PERMISSION_REQUEST);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        // BEGIN_INCLUDE(onRequestPermissionsResult)
+        if (requestCode == MY_PERMISSION_REQUEST) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permission GRANTED", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Permission DENIED", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

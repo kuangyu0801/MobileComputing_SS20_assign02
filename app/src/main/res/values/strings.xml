@@ -7,4 +7,10 @@
     <string name="tv1">Latitude</string>
     <string name="tv2">Distance</string>
     <string name="tv3">Average Speed</string>
+    <string name="external_write_required">External Write Permission Required</string>
+    <string name="external_read_required">External Read Permission Required</string>
+    <string name="external_write_permission_not_granted">External Write Permission Not Granted</string>
+    <string name="ok">OK</string>
+    <string name="camera_permission_granted">Permission Granted</string>
+    <string name="camera_permission_denied">Permission Denied</string>
 </resources>
