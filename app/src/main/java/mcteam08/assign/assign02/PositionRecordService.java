@@ -16,7 +16,6 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.util.Xml;
 
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import org.xmlpull.v1.XmlSerializer;
 
@@ -37,12 +36,9 @@ public class PositionRecordService extends Service implements LocationListener {
     final private static long MIN_DISTANCE = 1; // 1 meter
     final private static double EARTH_RADIUS = 6371004; //meter
     final private static double DEGREE_TO_RAD_FACTOR = Math.PI / 180.0;
-    final private static int MY_PERMISSION_REQUEST_READ_WRITE_EXTERNAL_STORAGE = 1; // request
-
 
     private LocalTime startTime;
     private LocalTime currentTime;
-    private LocalTime endTime;
     private long elaspedTime;
     private double distance;
     private double avgSpeed; // meter per second
@@ -96,7 +92,6 @@ public class PositionRecordService extends Service implements LocationListener {
 
         // DONE: step-1 crate GPX file with prefix
         serializer = Xml.newSerializer();
-        beginTrack();
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -149,6 +144,9 @@ public class PositionRecordService extends Service implements LocationListener {
         initState();
         startTime =  LocalTime.now();
         currentTime = startTime;
+
+        // Only start recording location when service is bounded
+        beginTrack();
         return impl;
     }
 
@@ -221,7 +219,6 @@ public class PositionRecordService extends Service implements LocationListener {
     private void initState() {
         startTime = LocalTime.now();
         currentTime = startTime;
-        endTime = startTime;
         distance = 0;
         elaspedTime = 0;
         avgSpeed = 0;
