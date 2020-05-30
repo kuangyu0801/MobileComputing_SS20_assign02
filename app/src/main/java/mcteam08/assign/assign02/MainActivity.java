@@ -4,12 +4,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
@@ -27,19 +29,21 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements ServiceConnection {
     final private static String TAG = MainActivity.class.getCanonicalName();
-    final private static int MY_PERMISSION_REQUEST_FINE_LOCATION = 1; // request
-    final private static int MY_PERMISSION_REQUEST_READ_WRITE_EXTERNAL_STORAGE = 2; // request
-    final private static int MY_PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 1; // request
     final private static int MY_PERMISSION_REQUEST = 1; // request
     final private static String[] MY_ALL_REQUIRED_PERMSSIONS = {
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.ACCESS_FINE_LOCATION
     };
+    final private static String ACTION_SERVICE_ACTIVE =  BuildConfig.APPLICATION_ID + "SERVICE_ACTIVE";
+    final private static String ACTION_SERVICE_INACTIVE =  BuildConfig.APPLICATION_ID + "SERVICE_INACTIVE";
+
     private Button bStart, bStop, bUpdate;
     private TextView tvLongitude, tvLatitude, tvDistance, tvAvgSpeed;
     private IPositionRecordService serviceProxy;
     private Intent i0;
+    private IntentFilter iFilterActive, iFilterInactive;
+    private ServiceBroadcastReceiver sReceiver = new ServiceBroadcastReceiver();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +69,15 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         bStart = findViewById(R.id.button_start);
         bStop = findViewById(R.id.button_stop);
         bUpdate = findViewById(R.id.button_update);
+
+        // service intent
         i0 = new Intent(this, PositionRecordService.class);
+
+        // register the receiver on creation
+        iFilterActive = new IntentFilter(ACTION_SERVICE_ACTIVE);
+        iFilterInactive = new IntentFilter(ACTION_SERVICE_INACTIVE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(sReceiver, iFilterActive);
+        LocalBroadcastManager.getInstance(this).registerReceiver(sReceiver, iFilterInactive);
     }
 
     @Override
@@ -120,6 +132,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     protected void onDestroy() {
         Log.i(TAG, "Activity destroyed");
         unbindService(this);
+        // unregister receiver on destroy
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(sReceiver);
         super.onDestroy();
     }
 

@@ -3,14 +3,18 @@
     <string name="bt_start">START SERVICE</string>
     <string name="bt_stop">STOP SERVICE</string>
     <string name="bt_update">UPDATE STATICS</string>
-    <string name="tv0">Longitude</string>
-    <string name="tv1">Latitude</string>
-    <string name="tv2">Distance</string>
-    <string name="tv3">Average Speed</string>
+    <string name="tv0">Longitude:</string>
+    <string name="tv1">Latitude:</string>
+    <string name="tv2">Distance (m):</string>
+    <string name="tv3">Avg. Speed (m/s):</string>
     <string name="external_write_required">External Write Permission Required</string>
     <string name="external_read_required">External Read Permission Required</string>
     <string name="external_write_permission_not_granted">External Write Permission Not Granted</string>
     <string name="ok">OK</string>
     <string name="camera_permission_granted">Permission Granted</string>
     <string name="camera_permission_denied">Permission Denied</string>
+    <string name="longitude">Longitude</string>
+    <string name="latitude">Latitude</string>
+    <string name="distance">Distance</string>
+    <string name="avg_speed">Avg. Speed</string>
 </resources>

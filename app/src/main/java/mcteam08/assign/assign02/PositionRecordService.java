@@ -17,6 +17,8 @@ import android.util.Log;
 import android.util.Xml;
 
 import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.BufferedWriter;
@@ -36,6 +38,8 @@ public class PositionRecordService extends Service implements LocationListener {
     final private static long MIN_DISTANCE = 1; // 1 meter
     final private static double EARTH_RADIUS = 6371004; //meter
     final private static double DEGREE_TO_RAD_FACTOR = Math.PI / 180.0;
+    final private static String ACTION_SERVICE_ACTIVE =  BuildConfig.APPLICATION_ID + "SERVICE_ACTIVE";
+    final private static String ACTION_SERVICE_INACTIVE =  BuildConfig.APPLICATION_ID + "SERVICE_INACTIVE";
 
     private LocalTime startTime;
     private LocalTime currentTime;
@@ -92,7 +96,7 @@ public class PositionRecordService extends Service implements LocationListener {
 
         // DONE: step-1 crate GPX file with prefix
         serializer = Xml.newSerializer();
-
+        sendServiceBroadcast(ACTION_SERVICE_ACTIVE);
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -147,12 +151,16 @@ public class PositionRecordService extends Service implements LocationListener {
 
         // Only start recording location when service is bounded
         beginTrack();
+
+        // sending service active to broadcast
+        sendServiceBroadcast(ACTION_SERVICE_ACTIVE);
         return impl;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
         Log.i(TAG, "Service unbound");
+        sendServiceBroadcast(ACTION_SERVICE_INACTIVE);
         return super.onUnbind(intent);
     }
 
@@ -296,6 +304,12 @@ public class PositionRecordService extends Service implements LocationListener {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void sendServiceBroadcast(String str) {
+        Log.i(TAG, "Send service active broadcast");
+        Intent i0 = new Intent(str);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(i0);
     }
 
 }
