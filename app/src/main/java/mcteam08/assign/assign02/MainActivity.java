@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     private Intent i0;
     private IntentFilter iFilterActive, iFilterInactive;
     private ServiceBroadcastReceiver sReceiver = new ServiceBroadcastReceiver();
+    private boolean isServiceStarted;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         iFilterInactive = new IntentFilter(ACTION_SERVICE_INACTIVE);
         LocalBroadcastManager.getInstance(this).registerReceiver(sReceiver, iFilterActive);
         LocalBroadcastManager.getInstance(this).registerReceiver(sReceiver, iFilterInactive);
+        isServiceStarted = false;
     }
 
     @Override
@@ -95,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 // 这个问题我研究过，没找着方法。如果只单纯用startService呢
                 // we can use MainActivity.this to indicated the activity
                 // bindService(i0, MainActivity.this, BIND_AUTO_CREATE);
+                isServiceStarted = true;
             }
         });
 
@@ -172,8 +175,14 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
     private void unbindService() {
         Log.i(TAG, "Unbind from Service");
-        // TODO: invalidate unbindeService by checking start has be confirmed.
-        unbindService(this);
+        // DONE: invalidate unbindeService by checking start has be confirmed.
+        if (isServiceStarted) {
+            unbindService(this);
+            isServiceStarted = false;
+        } else {
+            Toast.makeText(this, "Cannot stop service before start", Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     private boolean checkExternalPermission(){
