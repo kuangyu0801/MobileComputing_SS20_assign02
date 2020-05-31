@@ -172,6 +172,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
     private void unbindService() {
         Log.i(TAG, "Unbind from Service");
+        // TODO: invalidate unbindeService by checking start has be confirmed.
         unbindService(this);
     }
 
