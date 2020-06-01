@@ -70,6 +70,10 @@ public class PositionRecordService extends Service implements LocationListener {
         impl = new PositionRecordServiceImpl();
         elaspedTime = 0;
         distance = 0;
+
+        // DONE: step-1 crate GPX file with prefix
+        serializer = Xml.newSerializer();
+        beginTrack();
     }
 
     @Override
@@ -94,8 +98,7 @@ public class PositionRecordService extends Service implements LocationListener {
             }
         }
 
-        // DONE: step-1 crate GPX file with prefix
-        serializer = Xml.newSerializer();
+
         sendServiceBroadcast(ACTION_SERVICE_ACTIVE);
         return super.onStartCommand(intent, flags, startId);
     }
@@ -149,8 +152,6 @@ public class PositionRecordService extends Service implements LocationListener {
         startTime =  LocalTime.now();
         currentTime = startTime;
 
-        // Only start recording location when service is bounded
-        beginTrack();
 
         // sending service active to broadcast
         sendServiceBroadcast(ACTION_SERVICE_ACTIVE);
